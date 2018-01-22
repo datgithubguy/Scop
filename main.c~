@@ -9,8 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <sys/stat.h>
-
 #define SIZE_READ (4096*1)
 
 int	ft_strlen(char *s)
@@ -107,7 +105,7 @@ typedef struct	s_vec3
 
 typedef struct	s_vertices
 {
-	t_vec3	point;
+	t_vec3	point[3];
 }				t_vertices;
 
 typedef struct	s_faces
@@ -126,75 +124,12 @@ int		mstrchr(char *s, int a)
 	return (ret);
 }
 
-int		count_vertices(char *s, int *count)
-{
-	 float	i;
-	 int	off;
-
-	 off = 0;
-	 while ( s && (3 == sscanf(s+off, "v %f %f %f\n", &i, &i, &i) ) )
-	 {
-		 (off += mstrchr(s+off, (int)'\n' )+1);
-	 	 //printf("count vertices == %d, off == %d\n", *count, off);
-		 ++(*count);
-	 }
-	 return (off);
-}
-
-void	count_faces(char *s, int *count)
-{
-	 int	i;
-	 int	off;
-
-	 off = 0;
-	 while ( s && (3 == sscanf(s+off, "f %d %d %d\n", &i, &i, &i) ) )
-	 {
-		 (off += mstrchr(s+off, (int)'\n' )+1);
-	 	 //printf("count faces == %d, off == %d\n", *count, off);
-		 ++(*count);
-	 }
-}
-
-void	assign_faces(char *s, t_faces *f, int	i)
-{
-	 int	off;
-	 int	count;
-
-	 off = 0;
-	 count = 0;
-	 while (count < i &&  s
-			&& (f[count].indexes = (int *)malloc(sizeof(int)*3))
-			&& (3 == sscanf(s+off, "f %d %d %d\n", &f[count].indexes[0], &f[count].indexes[1], &f[count].indexes[2]) ) 
-		 )
-	 {
-		 (off += mstrchr(s+off, (int)'\n' )+1);
-	 	 printf("i == %d, count == %d, f[0] == %d\n", i, count, f[count].indexes[0]);
-		 ++(count);
-	 }
-}
-
-void	assign_vertices(char *s, t_vertices *v, int	i)
-{
-	 int	off;
-	 int	count;
-
-	 off = 0;
-	 count = 0;
-	 while (count < i &&  s && (3 == sscanf(s+off, "v %f %f %f\n", &v[count].point.x, &v[count].point.y, &v[count].point.z) ) )
-	 {
-		 (off += mstrchr(s+off, (int)'\n' )+1);
-	 	 
-		 ++(count);
-	 }
-}
-
-void	parse_file(char *obj_path, t_faces **faces, int *count_f)
+void	parse_file(char *obj_path)
 {
 	int		fd;
 	char	*s;
 	char	buff[SIZE_READ +1];
 	int		count;
-	int		off = 0;
 
 	count = 0;
 	fd = open(obj_path, O_RDONLY);
@@ -202,26 +137,22 @@ void	parse_file(char *obj_path, t_faces **faces, int *count_f)
 		die();
 	bzero(buff, '\0');
 	s = NULL;
-	struct stat	stats;
-	int			ret_stat;
-	ret_stat = fstat(fd, &stats);
-	s = (char *)malloc(sizeof(char)*(stats.st_size+1));
-	read(fd, s, stats.st_size);
-	s[stats.st_size] = '\0';
-//	printf("|%s| == s\n", s);
-	off = count_vertices(s, &count);
-	t_vertices	*vertices = (t_vertices *)malloc(sizeof(t_vertices)*count);
-	assign_vertices(s, vertices, count);
-	printf("v[0] == %f, v[0] == %f, v[2] == %f \n", vertices[count-1].point.x, vertices[count-1].point.y, vertices[count-1].point.z);
-
-	off += 1;
-	count = 0;
-	count_faces(s + off, &count);
-	printf("s+off == |%s|\n", s+off);
-	*faces = (t_faces *)malloc(sizeof(t_faces)*count);
-	assign_faces(s+off, *faces, count);
-	*count_f = count;
-//	printf("f[0] == %d, f[0] == %d, f[2] == %d \n", *faces[count-1].indexes[0], *faces[count-1].indexes[1], *faces[count-1].indexes[2]);
+	while (read(fd, &buff, SIZE_READ))
+	{
+		s = strjoin(s, buff);
+		memset(buff, '\0', SIZE_READ);
+	}
+	 printf("|%s| == s\n", s);
+	 float	i;
+	 int	off = 0;
+	 off = 0;
+	 printf("test chr\n");
+	 //printf("mstrchr == %d\n", mstrchr(s+off, (int)'\n' ));
+//	 while ( (off += mstrchr(s+off, (int)'\n' )) && (3 == sscanf(s+off, "v %f %f %f\n", &i, &i, &i) ) )
+ // (3 == sscanf(s+off, "v %f %f %f\n", &i, &i, &i))
+//	 	 printf("count vertices == %d, %s\n", count, s+off),++count;
+//	 printf("count vertices == %d\n", count);
+	 t_vertices	*vertices = (t_vertices *)malloc(sizeof(t_vertices)*count); 
 }
 
 static void	key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -267,31 +198,16 @@ void	init_scop(t_env *e)
 	if (!fd)
 		die();
 	printf("before point\n");
-	/*float faces[] = {-.0f, .50f, .0f, 
+	float faces[] = {-.0f, .50f, .0f, 
 					.5f, -.5f, .0f,
 					-.5f, -.50f, .0f
-					};*/
+	};
 
-	int	count = 0;
-	t_faces *faces_indexes;
-	faces_indexes = NULL;
-
-	parse_file(OBJ_PATH, &faces_indexes, &count);
-	printf("face_indexes = %p\n", faces_indexes);
-	printf("face index == %d\n", faces_indexes[0].indexes[0]);
-	float	*faces = (float *)malloc(sizeof(float)*count*3);
-	int		i = -1;
-	while(++i < count)
-	{
-		faces[i*3+0] = faces_indexes[i].indexes[0];
-		faces[i*3+1] = faces_indexes[i].indexes[1];
-		faces[i*3+2] = faces_indexes[i].indexes[2];
-		printf("%f\n", faces[i*3+0]);
-	}
+	parse_file(OBJ_PATH);
 
 	glGenBuffers(1, &(e->vbo));
 	glBindBuffer(GL_ARRAY_BUFFER, e->vbo);
-	glBufferData(GL_ARRAY_BUFFER, 3*count*sizeof(float), faces, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 9*sizeof(float), faces, GL_STATIC_DRAW);
 	
 	glGenVertexArrays(1, &(e->vao));
 	glBindVertexArray(e->vao);
