@@ -72,15 +72,21 @@ typedef struct	s_env
 	GLuint	vao;
 	GLuint	vs;
 	GLuint	fs;
-	GLuint shader_programme;
+	GLuint	shader_programme;
+	int		count;
 }				t_env;
 
 const char	*g_vertex_shader =
 "#version 410\n"
 "in vec3 uv;"
+"vec3 u;"
+"uniform float time;"
 "void main()"
 "{"
-	"gl_Position = vec4(uv, 1.0);"
+	"mat2 m = mat2(cos(time), sin(time), -sin(time), cos(time) );"
+	"u = uv;"
+	"u.xz *= m;"
+	"gl_Position = vec4(u, 1.0);"
 "}"
 ;
 
@@ -188,7 +194,7 @@ void	assign_vertices(char *s, t_vertices *v, int	i)
 	 }
 }
 
-void	parse_file(char *obj_path, t_faces **faces, int *count_f)
+void	parse_file(char *obj_path, t_faces **faces, t_vertices **vertices, int *count_f)
 {
 	int		fd;
 	char	*s;
@@ -210,9 +216,9 @@ void	parse_file(char *obj_path, t_faces **faces, int *count_f)
 	s[stats.st_size] = '\0';
 //	printf("|%s| == s\n", s);
 	off = count_vertices(s, &count);
-	t_vertices	*vertices = (t_vertices *)malloc(sizeof(t_vertices)*count);
-	assign_vertices(s, vertices, count);
-	printf("v[0] == %f, v[0] == %f, v[2] == %f \n", vertices[count-1].point.x, vertices[count-1].point.y, vertices[count-1].point.z);
+	*vertices = (t_vertices *)malloc(sizeof(t_vertices)*count);
+	assign_vertices(s, *vertices, count);
+	printf("v[0] == %f, v[0] == %f, v[2] == %f \n", (*vertices)[count-1].point.x, (*vertices)[count-1].point.y, (*vertices)[count-1].point.z);
 
 	off += 1;
 	count = 0;
@@ -232,12 +238,19 @@ static void	key_callback(GLFWwindow *window, int key, int scancode, int action, 
 
 void	render(t_env *e)
 {
+	static float	time = .0;
+	GLint			time_loc;
+	time_loc = glGetUniformLocation(e->shader_programme, "time");
+	glProgramUniform1f(e->shader_programme, time_loc, time);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUseProgram(e->shader_programme);
 	glBindVertexArray(e->vao);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	//glBufferData(GL_ARRAY_BUFFER, e->count * 3 * sizeof(float), &faces[0], GL_STATIC_DRAW);
+	//glDrawElements(GL_TRIANGLES, e->count*3, GL_UNSIGNED_INT, 0);
+	glDrawArrays(GL_POINTS, 0, e->count*3);
 	glfwPollEvents();
 	glfwSwapBuffers(e->window);
+	time += .016;
 }
 
 void	compile_shaders(t_env *e)
@@ -245,6 +258,20 @@ void	compile_shaders(t_env *e)
 	e->vs = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(e->vs, 1, &g_vertex_shader, NULL);
 	glCompileShader(e->vs);
+
+	GLint isCompiled = 0;
+	glGetShaderiv(e->vs, GL_COMPILE_STATUS, &isCompiled);
+	if (isCompiled == GL_FALSE)
+	{
+	GLint logSize = 0;
+	GLint	maxLength = 1000;
+	glGetShaderiv(e->vs, GL_INFO_LOG_LENGTH, &logSize);
+	char *errorLog = (char *)malloc(sizeof(char)*logSize);
+	glGetShaderInfoLog(e->vs, maxLength, &maxLength, &errorLog[0]);
+	printf("could not compile shader\n");
+	printf("%s\n", errorLog);
+	}
+
 	e->fs = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(e->fs, 1, &g_fragment_shader, NULL);
 	glCompileShader(e->fs);
@@ -272,33 +299,36 @@ void	init_scop(t_env *e)
 					-.5f, -.50f, .0f
 					};*/
 
-	int	count = 0;
-	t_faces *faces_indexes;
+	t_faces		*faces_indexes;
+	t_vertices	*vertices;
 	faces_indexes = NULL;
 
-	parse_file(OBJ_PATH, &faces_indexes, &count);
+	parse_file(OBJ_PATH, &faces_indexes, &vertices, &e->count);
 	printf("face_indexes = %p\n", faces_indexes);
 	printf("face index == %d\n", faces_indexes[0].indexes[0]);
-	float	*faces = (float *)malloc(sizeof(float)*count*3);
+	float	*faces = (float *)malloc(sizeof(float)*(e->count)*3);
 	int		i = -1;
-	while(++i < count)
+	printf("vertices[0].x == %f \n", vertices[0].point.x);
+	float	scale = .1f;
+	while(++i < e->count)
 	{
-		faces[i*3+0] = faces_indexes[i].indexes[0];
-		faces[i*3+1] = faces_indexes[i].indexes[1];
-		faces[i*3+2] = faces_indexes[i].indexes[2];
+		printf("index == %d \n", faces_indexes[i].indexes[0]);
+		faces[i*3+0] = vertices[faces_indexes[i].indexes[0]-1].point.x*scale;
+		faces[i*3+1] = vertices[faces_indexes[i].indexes[1]-1].point.y*scale;
+		faces[i*3+2] = vertices[faces_indexes[i].indexes[2]-1].point.z*scale;
 		printf("%f\n", faces[i*3+0]);
 	}
 
 	glGenBuffers(1, &(e->vbo));
 	glBindBuffer(GL_ARRAY_BUFFER, e->vbo);
-	glBufferData(GL_ARRAY_BUFFER, 3*count*sizeof(float), faces, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 3*(e->count)*sizeof(float), faces, GL_STATIC_DRAW);
 	
 	glGenVertexArrays(1, &(e->vao));
 	glBindVertexArray(e->vao);
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, e->vbo);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-
+	
 	compile_shaders(e);
 }
 
