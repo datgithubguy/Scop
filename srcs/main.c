@@ -105,11 +105,29 @@ void	compile_shaders(t_env *e)
 
 #define OBJ_PATH "teapot3.obj"
 
+void	make_faces(float **faces, t_faces *faces_indexes, t_vertices *vertices, t_env *e)
+{
+	int		i;
+	int		k;
+	float	scale = .1f;
+
+	i = -1;
+	k = -1;
+	while(++i < e->count)
+	{
+		k = -1;
+		while (++k < faces_indexes[i].count)
+			*(t_vec3*)( (*faces) + (i * 3 * faces_indexes[i].count + 0 + k * faces_indexes[i].count )) = vertices[faces_indexes[i].indexes[k%faces_indexes[i].count]-1].point;
+		for (int j = 0; j < 3 * faces_indexes[i].count; j++)
+			(*faces)[i * 3 * faces_indexes[i].count + j] *= scale;
+	}
+}
+
 void	init_scop(t_env *e)
 {
 	float	**points;
+	float	*faces;
 	int		fd;
-	int		num_faces;
 
 	fd = open(OBJ_PATH, O_RDONLY);
 	if (!fd)
@@ -119,22 +137,10 @@ void	init_scop(t_env *e)
 	t_vertices	*vertices;
 	faces_indexes = NULL;
 
-	parse_file(OBJ_PATH, &faces_indexes, &vertices, &e->count);
-	//printf("face_indexes = %p\n", faces_indexes);
-	//printf("face index == %d\n", faces_indexes[0].indexes[0]);
-	float	*faces = (float *)malloc(sizeof(float)*(e->count)*3*3);
-	int		i = -1;
-	printf("vertices[0].x == %f \n", vertices[0].point.x);
-	float	scale = .1f;
-	while(++i < e->count)
-	{
-		//printf("index == %d \n", faces_indexes[i].indexes[0]);
-		*(t_vec3*)(faces + (i * 9 + 0)) = vertices[faces_indexes[i].indexes[0]-1].point;
-		*(t_vec3*)(faces + (i * 9 + 3)) = vertices[faces_indexes[i].indexes[1]-1].point;
-		*(t_vec3*)(faces + (i * 9 + 6)) = vertices[faces_indexes[i].indexes[2]-1].point;
-		for (int j = 0; j < 9; j++)
-			faces[i * 9 + j] *= scale;
-	}
+	parse_file(OBJ_PATH, &faces_indexes, &vertices, &e->count, &e->num_vertexes);
+	faces = (float *)malloc(sizeof(float)*(e->count)*3*3);
+
+	make_faces(&faces, faces_indexes, vertices, e);
 
 	glGenBuffers(1, &(e->vbo));
 	glBindBuffer(GL_ARRAY_BUFFER, e->vbo);

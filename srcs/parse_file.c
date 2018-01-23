@@ -1,6 +1,7 @@
 #include "../includes/Scop.h"
 
-void	parse_file(char *obj_path, t_faces **faces, t_vertices **vertices, int *count_f)
+void	parse_file(char *obj_path, t_faces **faces, t_vertices **vertices,
+					int *count_f, int *num_vertexes)
 {
 	int		fd;
 	char	*s;
@@ -26,7 +27,7 @@ void	parse_file(char *obj_path, t_faces **faces, t_vertices **vertices, int *cou
 
 	off += 1;
 	count = 0;
-	count_faces(s + off, &count);
+	count_faces(s + off, &count, num_vertexes);
 	//printf("s+off == |%s|\n", s+off);
 	*faces = (t_faces *)malloc(sizeof(t_faces)*count);
 	assign_faces(s + off, *faces, count);

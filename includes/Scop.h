@@ -19,6 +19,7 @@ typedef struct	s_env
 	GLuint	fs;
 	GLuint	shader_programme;
 	int		count;
+	int		num_vertexes;
 }				t_env;
 
 typedef struct	s_vec3
@@ -41,11 +42,12 @@ typedef struct	s_faces
 
 void	die(void);
 int		count_vertices(char *s, int *count);
-void	count_faces(char *s, int *count);
+void	count_faces(char *s, int *count, int *num_vertexes);
 int		num_floats_in_line(char *line);
 void	assign_faces(char *s, t_faces *f, int	i);
 void	assign_vertices(char *s, t_vertices *v, int	i);
-void	parse_file(char *obj_path, t_faces **faces, t_vertices **vertices, int *count_f);
+void	parse_file(char *obj_path, t_faces **faces, t_vertices **vertices,
+					int *count_f, int *num_vertexes);
 void	render(t_env *e);
 void	compile_shaders(t_env *e);
 void	init_scop(t_env *e);
