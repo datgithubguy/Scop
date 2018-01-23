@@ -55,8 +55,8 @@ void	render(t_env *e)
 	glBindVertexArray(e->vao);
 	//glBufferData(GL_ARRAY_BUFFER, e->count * 3 * sizeof(float), &faces[0], GL_STATIC_DRAW);
 	//glDrawElements(GL_TRIANGLES, e->count*3, GL_UNSIGNED_INT, 0);
-	//glDrawArrays(GL_TRIANGLES, 0, e->count*3);
-	glDrawArrays(GL_LINES, 0, e->num_vertexes*3);
+	glDrawArrays(GL_TRIANGLES, 0, e->num_vertexes*3);
+	//glDrawArrays(GL_POINTS, 0, e->num_vertexes*3);
 	glfwPollEvents();
 	glfwSwapBuffers(e->window);
 	time += .0046;
@@ -103,13 +103,13 @@ void	compile_shaders(t_env *e)
 	glLinkProgram(e->shader_programme);
 }
 
-#define OBJ_PATH "42b.obj"
+#define OBJ_PATH "dragonfly.obj"
 
 void	make_faces(float **faces, t_faces *faces_indexes, t_vertices *vertices, t_env *e)
 {
 	int		i;
 	int		k;
-	float	scale = .1f;
+	float	scale = 15.1f;
 
 	i = -1;
 	k = -1;
@@ -140,7 +140,7 @@ void	init_scop(t_env *e)
 
 	parse_file(OBJ_PATH, &faces_indexes, &vertices, &e->count, &e->num_vertexes);
 	faces = (float *)malloc(sizeof(float) * 4 * e->num_vertexes);
-
+	bzero(faces, 4 * e->num_vertexes);
 	make_faces(&faces, faces_indexes, vertices, e);
 
 	glGenBuffers(1, &(e->vbo));
