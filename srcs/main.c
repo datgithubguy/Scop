@@ -1,6 +1,6 @@
-// gcc main.c -L ./../../glfw/src -lglfw3 -framework OpenGL -framework Appkit -framework Cocoa -framework IOKit -framework CoreVideo && ./a.out
+// gcc srcs/*.c -L ./../../glfw/src -lglfw3 -framework OpenGL -framework Appkit -framework Cocoa -framework IOKit -framework CoreVideo  && ./a.out
 
-#include "includes/Scop.h"
+#include "../includes/Scop.h"
 
 const char	*g_vertex_shader =
 "#version 410\n"
@@ -14,6 +14,7 @@ const char	*g_vertex_shader =
 	"mat2 m = mat2(cos(time), sin(time), -sin(time), cos(time) );"
 	"u = uv;"
 	"u.xz *= m;"
+	"u.yz *= m;"
 	"gl_Position = vec4(u, 1.0);"
 "}"
 ;
