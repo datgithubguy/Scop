@@ -15,9 +15,9 @@ void	assign_faces(char *s, t_faces *f, int	i)
 		 )
 	 {
 	 	f[count].count = nv;
-		 off += mstrchr(s + off, (int)'\n' ) + 1;
-		 ++(count);
-		 if (*(s+off))
+		off += mstrchr(s + off, (int)'\n' ) + 1;
+		if (*(s+off))
 			 nv = num_floats_in_line(s+off);
+		++(count);
 	 }
 }

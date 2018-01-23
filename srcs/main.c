@@ -56,7 +56,7 @@ void	render(t_env *e)
 	//glBufferData(GL_ARRAY_BUFFER, e->count * 3 * sizeof(float), &faces[0], GL_STATIC_DRAW);
 	//glDrawElements(GL_TRIANGLES, e->count*3, GL_UNSIGNED_INT, 0);
 	//glDrawArrays(GL_TRIANGLES, 0, e->count*3);
-	glDrawArrays(GL_LINES, 0, e->count*3);
+	glDrawArrays(GL_LINES, 0, e->num_vertexes*3);
 	glfwPollEvents();
 	glfwSwapBuffers(e->window);
 	time += .0046;
@@ -103,7 +103,7 @@ void	compile_shaders(t_env *e)
 	glLinkProgram(e->shader_programme);
 }
 
-#define OBJ_PATH "teapot3.obj"
+#define OBJ_PATH "42b.obj"
 
 void	make_faces(float **faces, t_faces *faces_indexes, t_vertices *vertices, t_env *e)
 {
@@ -116,6 +116,7 @@ void	make_faces(float **faces, t_faces *faces_indexes, t_vertices *vertices, t_e
 	while(++i < e->count)
 	{
 		k = -1;
+		printf("%d == faces_indexes[i].count, %d == i\n", faces_indexes[i].count, i );
 		while (++k < faces_indexes[i].count)
 			*(t_vec3*)( (*faces) + (i * 3 * faces_indexes[i].count + 0 + k * faces_indexes[i].count )) = vertices[faces_indexes[i].indexes[k%faces_indexes[i].count]-1].point;
 		for (int j = 0; j < 3 * faces_indexes[i].count; j++)
@@ -138,13 +139,13 @@ void	init_scop(t_env *e)
 	faces_indexes = NULL;
 
 	parse_file(OBJ_PATH, &faces_indexes, &vertices, &e->count, &e->num_vertexes);
-	faces = (float *)malloc(sizeof(float) * 3 * e->num_vertexes);
+	faces = (float *)malloc(sizeof(float) * 4 * e->num_vertexes);
 
 	make_faces(&faces, faces_indexes, vertices, e);
 
 	glGenBuffers(1, &(e->vbo));
 	glBindBuffer(GL_ARRAY_BUFFER, e->vbo);
-	glBufferData(GL_ARRAY_BUFFER, 3*3*(e->count)*sizeof(float), &faces[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 3 * e->num_vertexes*sizeof(float), &faces[0], GL_STATIC_DRAW);
 	
 	glGenVertexArrays(1, &(e->vao));
 	glBindVertexArray(e->vao);
