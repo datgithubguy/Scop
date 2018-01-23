@@ -138,7 +138,7 @@ void	init_scop(t_env *e)
 	faces_indexes = NULL;
 
 	parse_file(OBJ_PATH, &faces_indexes, &vertices, &e->count, &e->num_vertexes);
-	faces = (float *)malloc(sizeof(float)*(e->count)*3*3);
+	faces = (float *)malloc(sizeof(float) * 3 * e->num_vertexes);
 
 	make_faces(&faces, faces_indexes, vertices, e);
 
