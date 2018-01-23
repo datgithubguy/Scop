@@ -11,8 +11,6 @@
 
 #include <sys/stat.h>
 
-#define SIZE_READ (4096*1)
-
 int	ft_strlen(char *s)
 {
 	int	a;
@@ -21,48 +19,6 @@ int	ft_strlen(char *s)
 	while (++a && *s && s[a])
 		;
 	return a;
-}
-
-char	*strjoin(char *a, char *b)
-{
-	char	*s;
-	int		i;
-	int		lena;
-	int		lenb;
-
-	i = -1;
-	s = NULL;
-	if(!a && !(*b) )
-		return (NULL);
-	if (!a && *b)
-	{
-		lenb = strlen(b);
-		s = (char *)malloc(sizeof(char)*lenb+1);
-		i = -1;
-		while (++i < lenb -1)
-			s[i] = b[i];
-		s[i+1] = '\0';
-	}
-	else
-	{
-		lenb = strlen(b);
-		lena = strlen(a);
-		s = (char *)malloc(sizeof(char)*( lena + lenb));
-		i = -1;
-		while (++i < lena -0)
-			s[i] = a[i];
-		i = -1;
-		while (++i < lenb -1)
-			s[i + lena-0] = b[i];
-		s[i + lena] = '\0';
-		if (a)
-		{
-			free(a);
-			a = NULL;
-		}
-	}
-	//printf("s == |%s|\na == |s|\nb == |s|\n", s);
-	return (s);
 }
 
 typedef struct	s_env
@@ -94,7 +50,7 @@ const char	*g_fragment_shader =
 "#version 410\n"
 "out vec4 frag_colour;"
 "void main() {"
-"  frag_colour = vec4(0.5, 0.0, 0.5, 1.0);"
+"  frag_colour = vec4(1.0);"
 "}"
 ;
 
@@ -170,10 +126,10 @@ void	assign_faces(char *s, t_faces *f, int	i)
 	 count = 0;
 	 while (count < i &&  s
 			&& (f[count].indexes = (int *)malloc(sizeof(int)*3))
-			&& (3 == sscanf(s+off, "f %d %d %d\n", &f[count].indexes[0], &f[count].indexes[1], &f[count].indexes[2]) ) 
+			&& (3 == sscanf(s+off, "f %d %d %d\n", &f[count].indexes[0], &f[count].indexes[1], &f[count].indexes[2]) )
 		 )
 	 {
-		 (off += mstrchr(s+off, (int)'\n' )+1);
+		 off += mstrchr(s + off, (int)'\n' ) + 1;
 	 	 printf("i == %d, count == %d, f[0] == %d\n", i, count, f[count].indexes[0]);
 		 ++(count);
 	 }
@@ -188,8 +144,7 @@ void	assign_vertices(char *s, t_vertices *v, int	i)
 	 count = 0;
 	 while (count < i &&  s && (3 == sscanf(s+off, "v %f %f %f\n", &v[count].point.x, &v[count].point.y, &v[count].point.z) ) )
 	 {
-		 (off += mstrchr(s+off, (int)'\n' )+1);
-	 	 
+		 off += mstrchr(s + off, (int)'\n' ) + 1;
 		 ++(count);
 	 }
 }
@@ -198,7 +153,6 @@ void	parse_file(char *obj_path, t_faces **faces, t_vertices **vertices, int *cou
 {
 	int		fd;
 	char	*s;
-	char	buff[SIZE_READ +1];
 	int		count;
 	int		off = 0;
 
@@ -206,7 +160,6 @@ void	parse_file(char *obj_path, t_faces **faces, t_vertices **vertices, int *cou
 	fd = open(obj_path, O_RDONLY);
 	if (fd < 0)
 		die();
-	bzero(buff, '\0');
 	s = NULL;
 	struct stat	stats;
 	int			ret_stat;
@@ -225,7 +178,7 @@ void	parse_file(char *obj_path, t_faces **faces, t_vertices **vertices, int *cou
 	count_faces(s + off, &count);
 	printf("s+off == |%s|\n", s+off);
 	*faces = (t_faces *)malloc(sizeof(t_faces)*count);
-	assign_faces(s+off, *faces, count);
+	assign_faces(s + off, *faces, count);
 	*count_f = count;
 //	printf("f[0] == %d, f[0] == %d, f[2] == %d \n", *faces[count-1].indexes[0], *faces[count-1].indexes[1], *faces[count-1].indexes[2]);
 }
@@ -247,10 +200,10 @@ void	render(t_env *e)
 	glBindVertexArray(e->vao);
 	//glBufferData(GL_ARRAY_BUFFER, e->count * 3 * sizeof(float), &faces[0], GL_STATIC_DRAW);
 	//glDrawElements(GL_TRIANGLES, e->count*3, GL_UNSIGNED_INT, 0);
-	glDrawArrays(GL_POINTS, 0, e->count*3);
+	glDrawArrays(GL_LINES, 0, e->count*3);
 	glfwPollEvents();
 	glfwSwapBuffers(e->window);
-	time += .016;
+	time += .0046;
 }
 
 void	compile_shaders(t_env *e)
@@ -293,35 +246,43 @@ void	init_scop(t_env *e)
 	fd = open(OBJ_PATH, O_RDONLY);
 	if (!fd)
 		die();
-	printf("before point\n");
-	/*float faces[] = {-.0f, .50f, .0f, 
-					.5f, -.5f, .0f,
-					-.5f, -.50f, .0f
-					};*/
 
 	t_faces		*faces_indexes;
 	t_vertices	*vertices;
 	faces_indexes = NULL;
 
 	parse_file(OBJ_PATH, &faces_indexes, &vertices, &e->count);
-	printf("face_indexes = %p\n", faces_indexes);
-	printf("face index == %d\n", faces_indexes[0].indexes[0]);
-	float	*faces = (float *)malloc(sizeof(float)*(e->count)*3);
+	//printf("face_indexes = %p\n", faces_indexes);
+	//printf("face index == %d\n", faces_indexes[0].indexes[0]);
+	float	*faces = (float *)malloc(sizeof(float)*(e->count)*3*3);
 	int		i = -1;
 	printf("vertices[0].x == %f \n", vertices[0].point.x);
 	float	scale = .1f;
 	while(++i < e->count)
 	{
-		printf("index == %d \n", faces_indexes[i].indexes[0]);
-		faces[i*3+0] = vertices[faces_indexes[i].indexes[0]-1].point.x*scale;
-		faces[i*3+1] = vertices[faces_indexes[i].indexes[1]-1].point.y*scale;
-		faces[i*3+2] = vertices[faces_indexes[i].indexes[2]-1].point.z*scale;
-		printf("%f\n", faces[i*3+0]);
+		//printf("index == %d \n", faces_indexes[i].indexes[0]);
+		*(t_vec3*)(faces + (i * 9 + 0)) = vertices[faces_indexes[i].indexes[0]-1].point;
+		*(t_vec3*)(faces + (i * 9 + 3)) = vertices[faces_indexes[i].indexes[1]-1].point;
+		*(t_vec3*)(faces + (i * 9 + 6)) = vertices[faces_indexes[i].indexes[2]-1].point;
+		for (int j = 0; j < 9; j++)
+			faces[i * 9 + j] *= scale;
+//		faces[i*9+0] = vertices[faces_indexes[i].indexes[0]-1].point.x*scale;
+		//	faces[i*9+1] = vertices[faces_indexes[i].indexes[0]-1].point.y*scale;
+		//faces[i*9+2] = vertices[faces_indexes[i].indexes[0]-1].point.z*scale;
+
+//		faces[i*9+3] = vertices[faces_indexes[i].indexes[1]-1].point.x*scale;
+//		faces[i*9+4] = vertices[faces_indexes[i].indexes[1]-1].point.y*scale;
+//		faces[i*9+5] = vertices[faces_indexes[i].indexes[1]-1].point.z*scale;
+
+//		faces[i*9+6] = vertices[faces_indexes[i].indexes[2]-1].point.x*scale;
+//		faces[i*9+7] = vertices[faces_indexes[i].indexes[2]-1].point.y*scale;
+//		faces[i*9+8] = vertices[faces_indexes[i].indexes[2]-1].point.z*scale;
+		//printf("%f\n", faces[i*3+0]);
 	}
 
 	glGenBuffers(1, &(e->vbo));
 	glBindBuffer(GL_ARRAY_BUFFER, e->vbo);
-	glBufferData(GL_ARRAY_BUFFER, 3*(e->count)*sizeof(float), faces, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 3*3*(e->count)*sizeof(float), &faces[0], GL_STATIC_DRAW);
 	
 	glGenVertexArrays(1, &(e->vao));
 	glBindVertexArray(e->vao);
