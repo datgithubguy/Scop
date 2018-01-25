@@ -17,6 +17,7 @@ void	parse_file(char *obj_path, t_faces **faces, t_vertices **vertices,
 	int			ret_stat;
 	ret_stat = fstat(fd, &stats);
 	s = (char *)malloc(sizeof(char)*(stats.st_size+1));
+	bzero(s, sizeof(char) * stats.st_size);
 	read(fd, s, stats.st_size);
 	s[stats.st_size] = '\0';
 //	printf("|%s| == s\n", s);

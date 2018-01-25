@@ -1,4 +1,4 @@
-// gcc srcs/*.c -L ./../../glfw/src -lglfw3 -framework OpenGL -framework Appkit -framework Cocoa -framework IOKit -framework CoreVideo  && ./a.out
+//gcc srcs/*.c -L ./../../glfw/src -lglfw3 -framework OpenGL -framework Appkit -framework Cocoa -framework IOKit -framework CoreVideo -Wall -Wextra -Werror -fsanitize=address -g && ./a.out
 
 #include "../includes/Scop.h"
 
@@ -14,7 +14,7 @@ const char	*g_vertex_shader =
 	"mat2 m = mat2(cos(time), sin(time), -sin(time), cos(time) );"
 	"u = uv;"
 	"u.xz *= m;"
-	"u.yz *= m;"
+//	"u.yz *= m;"
 	"gl_Position = vec4(u, 1.0);"
 "}"
 ;
@@ -40,6 +40,8 @@ void	die(void)
 
 static void	key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
+	(void)scancode;
+	(void)mods;
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, 1);
 }
@@ -70,6 +72,7 @@ void	compile_shaders(t_env *e)
 
 	GLint isCompiled = 0;
 	glGetShaderiv(e->vs, GL_COMPILE_STATUS, &isCompiled);
+	/*
 	if (isCompiled == GL_FALSE)
 	{
 	GLint logSize = 0;
@@ -80,12 +83,14 @@ void	compile_shaders(t_env *e)
 	printf("could not compile shader\n");
 	printf("%s\n", errorLog);
 	}
+	*/
 
 	e->fs = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(e->fs, 1, &g_fragment_shader, NULL);
 	glCompileShader(e->fs);
 	isCompiled = 0;
 	glGetShaderiv(e->vs, GL_COMPILE_STATUS, &isCompiled);
+	/*
 	if (isCompiled == GL_FALSE)
 	{
 	GLint logSize = 0;
@@ -96,6 +101,7 @@ void	compile_shaders(t_env *e)
 	printf("could not compile shader\n");
 	printf("%s\n", errorLog);
 	}
+	*/
 
 	e->shader_programme = glCreateProgram();
 	glAttachShader(e->shader_programme, e->fs);
@@ -103,30 +109,10 @@ void	compile_shaders(t_env *e)
 	glLinkProgram(e->shader_programme);
 }
 
-#define OBJ_PATH "dragonfly.obj"
-
-void	make_faces(float **faces, t_faces *faces_indexes, t_vertices *vertices, t_env *e)
-{
-	int		i;
-	int		k;
-	float	scale = 15.1f;
-
-	i = -1;
-	k = -1;
-	while(++i < e->count)
-	{
-		k = -1;
-		printf("%d == faces_indexes[i].count, %d == i\n", faces_indexes[i].count, i );
-		while (++k < faces_indexes[i].count)
-			*(t_vec3*)( (*faces) + (i * 3 * faces_indexes[i].count + 0 + k * faces_indexes[i].count )) = vertices[faces_indexes[i].indexes[k%faces_indexes[i].count]-1].point;
-		for (int j = 0; j < 3 * faces_indexes[i].count; j++)
-			(*faces)[i * 3 * faces_indexes[i].count + j] *= scale;
-	}
-}
+#define OBJ_PATH "42b.obj"
 
 void	init_scop(t_env *e)
 {
-	float	**points;
 	float	*faces;
 	int		fd;
 
@@ -139,8 +125,8 @@ void	init_scop(t_env *e)
 	faces_indexes = NULL;
 
 	parse_file(OBJ_PATH, &faces_indexes, &vertices, &e->count, &e->num_vertexes);
-	faces = (float *)malloc(sizeof(float) * 4 * e->num_vertexes);
-	bzero(faces, 4 * e->num_vertexes);
+	faces = (float *)malloc(sizeof(float) * 3 * e->num_vertexes);
+	bzero(faces, 3 * e->num_vertexes + 6*2);
 	make_faces(&faces, faces_indexes, vertices, e);
 
 	glGenBuffers(1, &(e->vbo));
@@ -165,6 +151,7 @@ int		main(void)
 {
 	t_env	e;
 
+	bzero(&e, sizeof(t_env)); // highly important
 	if (!glfwInit())
 		write(1, "failed init !\n", 14);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);

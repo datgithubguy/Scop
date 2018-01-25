@@ -48,6 +48,9 @@ void	assign_faces(char *s, t_faces *f, int	i);
 void	assign_vertices(char *s, t_vertices *v, int	i);
 void	parse_file(char *obj_path, t_faces **faces, t_vertices **vertices,
 					int *count_f, int *num_vertexes);
+
+void	make_faces(float **faces, t_faces *faces_indexes, t_vertices *vertices, t_env *e);
+
 void	render(t_env *e);
 void	compile_shaders(t_env *e);
 void	init_scop(t_env *e);
