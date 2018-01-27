@@ -8,7 +8,7 @@ void	make_faces(float **faces, t_faces *faces_indexes, t_vertices *vertices, t_e
 
 	i = -1;
 	int	n = 0;
-	while(++i < e->count)
+	while(++i < e->count+1)
 	{
 		printf("e count == %d, i == %d \n", e->count, i);
 		k = -1;
