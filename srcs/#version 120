@@ -1,0 +1,31 @@
+/*
+in gl_PerVertex
+{
+  vec4 gl_Position;
+//  float gl_PointSize;
+//  float gl_ClipDistance[];
+} gl_in[];
+
+out gl_PerVertex
+{
+  vec4 gl_Position;
+//  float gl_PointSize;
+//  float gl_ClipDistance[];
+} gl_out[];
+*/
+
+#version 120\n
+layout(points) in;
+layout(triangle_strip, max_vertices = 3) out;
+in int gl_PrimitiveIDIn;
+in t;
+
+void	main()
+{
+	for(float i = 0.; i < 3; i++)
+	{
+		gl_position = vec4(.0, .0-i, .0+i, .0);
+		EmitVertex();
+	}
+	EndPrimitive();
+}

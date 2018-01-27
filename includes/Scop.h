@@ -16,6 +16,7 @@ typedef struct	s_env
 	GLuint	vbo;
 	GLuint	vao;
 	GLuint	vs;
+	GLuint	gs;
 	GLuint	fs;
 	GLuint	shader_programme;
 	int		count;
