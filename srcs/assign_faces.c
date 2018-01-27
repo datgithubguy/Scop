@@ -20,4 +20,5 @@ void	assign_faces(char *s, t_faces *f, int	i)
 			 nv = num_floats_in_line(s+off);
 		++(count);
 	 }
+	 printf("assigned faces count == %d\n", count);
 }
