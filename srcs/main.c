@@ -15,7 +15,7 @@ const char	*g_vertex_shader =
 	"mat2 m = mat2(cos(time), sin(time), -sin(time), cos(time) );"
 	"u = uv;"
 //	"u.xz *= m;"
-	"u.yz *= m;"
+//	"u.yz *= m;"
 	"gl_Position = vec4(u, 1.0);"
 "}"
 ;
@@ -28,11 +28,11 @@ const char	*g_fragment_shader =
 "in float t;"
 //"in vec2 tx;"
 "void main() {"
-"  vec3 light = vec3(-1., 1.0, 1.)*.1;"
+"  vec3 light = vec3(-10., 10.0, 1.)*.1;"
 //"	"
-"  float li = .5*clamp(1.-dot(normal, (light) ), .0, 1.);"
+"  float li = .5*clamp(dot(normal, (light) ), .0, 1.);"
 //"  li = pow(.625, abs(li));"
-"  frag_colour = vec4( li*.9+.2,li*.75+.2, 1., 1.0);"
+"  frag_colour = 1.0*vec4( li*.9+.2,li*.75+.2, 1., 1.0);"
 "}"
 ;
 
@@ -104,7 +104,7 @@ void	render(t_env *e)
 	// glDrawArrays(GL_POINTS, 0, e->num_vertexes*3*sizeof(float));
 	glfwPollEvents();
 	glfwSwapBuffers(e->window);
-	time += .05046;
+	time += .0046;
 }
 
 void	compile_shaders(t_env *e)
@@ -182,7 +182,7 @@ void	init_scop(t_env *e)
 	faces_indexes = NULL;
 
 	parse_file(OBJ_PATH, &faces_indexes, &vertices, &e->count, &e->num_vertexes);
-	faces = (float *)malloc(sizeof(float) * 3 * e->num_vertexes);
+	faces = (float *)malloc(e->num_vertexes * 3 * sizeof(float));
 	bzero(faces, e->num_vertexes * 3 * sizeof(float));
 	make_faces(&faces, faces_indexes, vertices, e);
 
