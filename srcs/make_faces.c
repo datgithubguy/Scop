@@ -4,7 +4,7 @@ void	make_faces(float **faces, t_faces *faces_indexes, t_vertices *vertices, t_e
 {
 	int		i;
 	int		k;
-	float	scale = .251f;
+	float	scale = 15.251f;
 
 	i = -1;
 	int	n = 0;

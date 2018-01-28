@@ -15,7 +15,7 @@ const char	*g_vertex_shader =
 	"mat2 m = mat2(cos(time), sin(time), -sin(time), cos(time) );"
 	"u = uv;"
 //	"u.xz *= m;"
-//	"u.yz *= m;"
+	"u.yz *= m;"
 	"gl_Position = vec4(u, 1.0);"
 "}"
 ;
@@ -25,14 +25,20 @@ const char	*g_fragment_shader =
 "out vec4 frag_colour;"
 "in vec3 u;"
 "in vec3 normal;"
-"in float t;"
+"uniform float time;"
 //"in vec2 tx;"
 "void main() {"
-"  vec3 light = vec3(-10., 10.0, 1.)*.1;"
-//"	"
+"  vec3 light = vec3(+cos(time*4.)*20., +sin(time*4.)*20., +sin(time*4.)*20.)*.1;"
 "  float li = .5*clamp(dot(normal, (light) ), .0, 1.);"
-//"  li = pow(.625, abs(li));"
-"  frag_colour = 1.0*vec4( li*.9+.2,li*.75+.2, 1., 1.0);"
+"  li = 1.-pow(.125, abs(li));"
+//"	mat2 m = mat2(cos(time*-1.), sin(time*-1.), -sin(time*-1.), cos(time*-1.) );"
+//"	vec3 ux = u;"
+//"	ux.xz *= m;"
+//"	vec3 nx = normal;"
+//"	nx.xz *= m;"
+//"	li += .52*(1.0 - max(dot(normalize(-ux), nx), .0));"
+//"	li = u.x;"
+"  frag_colour = 1.0*vec4( li*.9+.2,li*.75+.2, -li+.71, 1.0);"
 "}"
 ;
 
@@ -50,15 +56,19 @@ const char	*g_geometry_shader =
   "vec4 gl_Position;"
 "} gl_out;"
 "out vec3 normal;"
+"out vec3 u;"
 "void	main()"
 "{"
-"float id = 6.28*float(gl_PrimitiveIDIn)/45.;"
-"mat2 m = mat2(cos(time*1.1), sin(time*1.1), -sin(time*1.1), cos(time*1.1) );"
-"	for(int i = 0; i < 3; i++)"
+"float id = float(gl_PrimitiveIDIn);"
+"mat2 m = mat2(cos(time*1.), sin(time*1.), -sin(time*1.), cos(time*1.) );"
+//"	if (mod(id+floor(time*8.), 5.) >= +floor(time*1.) )"
+"	if (id < floor(time*1000.))"
+"	for (int i = 0; i < 3; i++)"
 	"{"
 		"gl_out.gl_Position = "
 		"gl_in[i].gl_Position-vec4(-.0,.0,.0, .0);"
 		"gl_out.gl_Position.xz *= m;"
+		"u = gl_out.gl_Position.xyz;"
 		"vec3 tmp_0, tmp_1, tmp_2;"
 		"tmp_0 = gl_in[2].gl_Position.xyz;"
 		"tmp_1 = gl_in[1].gl_Position.xyz;"
@@ -69,6 +79,7 @@ const char	*g_geometry_shader =
 		"vec3 A = tmp_0 - tmp_2;"
 	    "vec3 B = tmp_1 - tmp_2;"
 	    "normal = normalize(cross(A,B));"
+	    //"gl_out.gl_Position.xyz += normal*-.01f*abs(sin(time*8.));"
 		"EmitVertex();"
 	"}"
 	"EndPrimitive();"
@@ -157,6 +168,7 @@ void	compile_shaders(t_env *e)
 		glGetShaderInfoLog(e->fs, maxLength, &maxLength, &errorLog[0]);
 		printf("could not compile fragment shader\n");
 		printf("%s\n", errorLog);
+		die();
 	}
 
 	e->shader_programme = glCreateProgram();
@@ -166,7 +178,7 @@ void	compile_shaders(t_env *e)
 	glLinkProgram(e->shader_programme);
 }
 
-#define OBJ_PATH "42b.obj"
+#define OBJ_PATH "dragonfly.obj"
 
 void	init_scop(t_env *e)
 {
