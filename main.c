@@ -118,7 +118,7 @@ void	init_scop(t_env *e)
 	t_vertices	*vertices;
 	faces_indexes = NULL;
 
-	parse_file(OBJ_PATH, &faces_indexes, &vertices, &e->count);
+	parse_file(OBJ_PATH, &faces_indexes, &vertices, &e->count, &e->num_vertexes);
 	//printf("face_indexes = %p\n", faces_indexes);
 	//printf("face index == %d\n", faces_indexes[0].indexes[0]);
 	float	*faces = (float *)malloc(sizeof(float)*(e->count)*3*3);
