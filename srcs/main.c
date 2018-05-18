@@ -65,8 +65,8 @@ const char	*g_geometry_shader =
 "{"
 "float aspect = 1920./1440.;"
 "float aa = 1./(tan(1.58/2.));"
-"float near = 10.0;"
-"float far  = 1000.01;"
+"float near = .50;"
+"float far  = 100.01;"
 // "mat4 perspective = mat4("
 // 				"aa/aspect, .0, .0, .0, "
 // 				".0, aa, .0, .0,"
@@ -79,7 +79,7 @@ const char	*g_geometry_shader =
 				".0, .0, -((far+near)/(far - near)), -1.,"
 				".0, .0, -((2. * far * near) / (far - near)), .0"
 ");"
-"float W = 1./tan(1./2.);"
+"float W = aspect*atan(2./2.);"
 "float H = W;"
 "float Q = far/(far-near);"
 "perspective = mat4("
@@ -92,13 +92,19 @@ const char	*g_geometry_shader =
 "perspective = mat4("
 				"W, .0, .0, .0, "
 				".0, H, .0, .0,"
-				".0, .0, Q, 1.0,"
-				".0, .0, -Q*near, .0"
+				".0, .0, -(far+near)/(far-near), -2.*(near*far)/(far-near),"
+				".0, .0, -1., .0"
 ");"
 
+"mat4 world_proj = mat4("
+				"1./1., .0, .0, .0, "
+				".0, 1./1., .0, .0,"
+				".0, .0, -2./(far-near), -(far+near)/(far-near),"
+				".0, .0, .0, 1.0"
+");"
 
 "float id = float(gl_PrimitiveIDIn);"
-"mat2 m = mat2(cos(time*.1), sin(time*.1), -sin(time*.1), cos(time*.1) );"
+"mat2 m = mat2(cos(time*1.), sin(time*1.), -sin(time*1.), cos(time*1.) );"
 //"	if (mod(id+floor(time*8.), 5.) >= +floor(time*1.) )"
 //"	if (id < floor(time*1000.))"
 "	for (int i = 0; i < 3; i++)"
@@ -110,11 +116,14 @@ const char	*g_geometry_shader =
 		//"tx = vec2( min(min(u.xy, u.xz), u.zy));"
 		//"gl_out.gl_Position.xy /= gl_out.gl_Position.z+1.;"
 		//"gl_out.gl_Position.xz *= m;"
-	"vec4 test_pos = vec4(gl_out.gl_Position.xyz*.5, 1.);"
+	"vec4 test_pos = vec4(gl_out.gl_Position.xyz, 1.);"
 //		"gl_out.gl_Position.xyzw *= perspective;"
+//"test_pos.w = gl_out.gl_Position.w;"
 "test_pos.xz *= m;"
-//"test_pos.zy *= m;"
+"test_pos.zy *= m;"
+"test_pos.xyzw *= world_proj;"
 "test_pos.xyzw *= perspective;"
+//"test_pos /= test_pos.w;"
 //"test_pos.xz *= m;"
 		//"u = gl_out.gl_Position.xyz/gl_out.gl_Position.z;"
 		"u = gl_out.gl_Position.xyz;"
@@ -157,6 +166,9 @@ void	render(t_env *e)
 	static float	time = .0;
 	GLint			time_loc;
 	time_loc = glGetUniformLocation(e->shader_programme, "time");
+
+//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 	glProgramUniform1f(e->shader_programme, time_loc, time);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUseProgram(e->shader_programme);
@@ -164,7 +176,7 @@ void	render(t_env *e)
 	//glBufferData(GL_ARRAY_BUFFER, e->count * 3 * sizeof(float), &faces[0], GL_STATIC_DRAW);
 	//glDrawElements(GL_TRIANGLES, e->count*3, GL_UNSIGNED_INT, 0);
 	glDrawArrays(GL_TRIANGLES, 0, e->num_vertexes*3*sizeof(float) );
-	// glDrawArrays(GL_POINTS, 0, e->num_vertexes*3*sizeof(float));
+	//glDrawArrays(GL_LINES, 0, e->num_vertexes*2*sizeof(float));
 	glfwPollEvents();
 	glfwSwapBuffers(e->window);
 	time += .0046;
